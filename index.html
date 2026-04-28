@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAIMS — Township Asset & Inventory Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="login-screen">
+  <div class="login-bg">
+    <div class="login-orb orb1"></div>
+    <div class="login-orb orb2"></div>
+    <div class="login-orb orb3"></div>
+    <div class="login-grid"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0ea5e9"/>
+          <path d="M8 24L16 8L24 24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10.5 19h11" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">TAIMS</div>
+        <div class="logo-sub">Asset & Inventory Management</div>
+      </div>
+    </div>
+    <h2 class="login-title">Welcome back</h2>
+    <p class="login-desc">Sign in to your community dashboard</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="admin@township.com" class="form-input">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" class="form-input">
+    </div>
+    <div class="login-roles">
+      <span class="role-chip" onclick="quickLogin('admin')">Admin</span>
+      <span class="role-chip" onclick="quickLogin('supervisor')">Supervisor</span>
+      <span class="role-chip" onclick="quickLogin('worker')">Worker</span>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div class="login-info">Demo: click any role chip above to quick-login</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app hidden">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-mark">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0ea5e9"/>
+          <path d="M8 24L16 8L24 24" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10.5 19h11" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-name-sm">TAIMS</span>
+        <span class="logo-community">Emerald Township</span>
+      </div>
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="user-pill">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Admin User</div>
+        <div class="user-role" id="user-role">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Logout">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" onclick="showPage('alerts')" data-page="alerts">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span>Alerts</span>
+        <span class="badge-count" id="alert-badge">7</span>
+      </a>
+
+      <div class="nav-section-label">Assets</div>
+      <a class="nav-item" onclick="showPage('assets')" data-page="assets">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        <span>Asset Registry</span>
+      </a>
+      <a class="nav-item" onclick="showPage('add-asset')" data-page="add-asset" id="nav-add-asset">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>Add Asset</span>
+      </a>
+
+      <div class="nav-section-label">Compliance</div>
+      <a class="nav-item" onclick="showPage('warranty')" data-page="warranty">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Warranty</span>
+      </a>
+      <a class="nav-item" onclick="showPage('amc')" data-page="amc">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>AMC Tracker</span>
+      </a>
+
+      <div class="nav-section-label">Operations</div>
+      <a class="nav-item" onclick="showPage('tasks')" data-page="tasks">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>Maintenance Tasks</span>
+        <span class="badge-count pending" id="task-badge">12</span>
+      </a>
+      <a class="nav-item" onclick="showPage('calendar')" data-page="calendar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Calendar</span>
+      </a>
+
+      <div class="nav-section-label">Insights</div>
+      <a class="nav-item" onclick="showPage('reports')" data-page="reports">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Reports</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="community-stats">
+        <div class="stat-chip"><span>486</span> Flats</div>
+        <div class="stat-chip"><span>9</span> Towers</div>
+        <div class="stat-chip"><span>18</span> Lifts</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="main-content">
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-breadcrumb" id="topbar-breadcrumb">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="search-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="global-search" placeholder="Search assets, tasks..." onkeyup="globalSearch(this.value)">
+        </div>
+        <button class="icon-btn" onclick="showPage('alerts')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="dot-badge"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGES -->
+    <div class="page-container">
+
+      <!-- DASHBOARD PAGE -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Good morning, <span id="greeting-name">Admin</span> 👋</h1>
+            <p class="page-subtitle">Here's what's happening across Emerald Township today</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="showPage('reports')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export Report
+            </button>
+            <button class="btn-primary" onclick="showPage('add-asset')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Asset
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+          <div class="kpi-card" onclick="showPage('assets')">
+            <div class="kpi-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+            <div class="kpi-data">
+              <div class="kpi-value">847</div>
+              <div class="kpi-label">Total Assets</div>
+            </div>
+            <div class="kpi-trend up">+12 this month</div>
+          </div>
+          <div class="kpi-card critical" onclick="filterAssets('critical')">
+            <div class="kpi-icon red"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div class="kpi-data">
+              <div class="kpi-value">23</div>
+              <div class="kpi-label">Critical Assets</div>
+            </div>
+            <div class="kpi-trend down">Needs attention</div>
+          </div>
+          <div class="kpi-card" onclick="showPage('warranty')">
+            <div class="kpi-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="kpi-data">
+              <div class="kpi-value">142</div>
+              <div class="kpi-label">Active Warranty</div>
+            </div>
+            <div class="kpi-trend warning">8 expiring soon</div>
+          </div>
+          <div class="kpi-card" onclick="showPage('amc')">
+            <div class="kpi-icon orange"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="kpi-data">
+              <div class="kpi-value">67</div>
+              <div class="kpi-label">Active AMC</div>
+            </div>
+            <div class="kpi-trend warning">5 expiring soon</div>
+          </div>
+          <div class="kpi-card" onclick="filterTasks('open')">
+            <div class="kpi-icon purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+            <div class="kpi-data">
+              <div class="kpi-value">12</div>
+              <div class="kpi-label">Pending Tasks</div>
+            </div>
+            <div class="kpi-trend down">3 overdue</div>
+          </div>
+          <div class="kpi-card success" onclick="filterTasks('completed')">
+            <div class="kpi-icon teal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="kpi-data">
+              <div class="kpi-value">189</div>
+              <div class="kpi-label">Completed Tasks</div>
+            </div>
+            <div class="kpi-trend up">This month</div>
+          </div>
+        </div>
+
+        <!-- TOWER MAP + QUICK ALERTS -->
+        <div class="dashboard-grid">
+          <div class="card tower-map-card">
+            <div class="card-header">
+              <h3 class="card-title">Tower Overview</h3>
+              <div class="card-actions">
+                <select class="filter-select-sm" onchange="filterTower(this.value)">
+                  <option value="">All Towers</option>
+                  <option>Tower 1</option><option>Tower 2</option><option>Tower 3</option>
+                  <option>Tower 4</option><option>Tower 5</option><option>Tower 6</option>
+                  <option>Tower 7</option><option>Tower 8</option><option>Tower 9</option>
+                </select>
+              </div>
+            </div>
+            <div class="tower-grid" id="tower-grid"></div>
+          </div>
+
+          <div class="card alerts-card">
+            <div class="card-header">
+              <h3 class="card-title">Active Alerts</h3>
+              <a class="card-link" onclick="showPage('alerts')">View all</a>
+            </div>
+            <div class="alerts-list" id="dashboard-alerts"></div>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY + ASSET BREAKDOWN -->
+        <div class="dashboard-grid-3">
+          <div class="card span-2">
+            <div class="card-header">
+              <h3 class="card-title">Recent Maintenance Activity</h3>
+              <a class="card-link" onclick="showPage('tasks')">View all</a>
+            </div>
+            <div class="activity-table" id="recent-activity"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Asset Categories</h3>
+            </div>
+            <div class="donut-wrap">
+              <canvas id="category-chart" width="200" height="200"></canvas>
+              <div class="donut-legend" id="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSET REGISTRY PAGE -->
+      <div id="page-assets" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Asset Registry</h1>
+            <p class="page-subtitle">Complete inventory of all township assets</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="exportAssets()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export
+            </button>
+            <button class="btn-primary" onclick="showPage('add-asset')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Asset
+            </button>
+          </div>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="filter-bar">
+          <div class="search-filter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="asset-search" placeholder="Search by name, ID, location..." onkeyup="filterAssetTable()">
+          </div>
+          <select id="filter-tower" class="filter-select" onchange="filterAssetTable()">
+            <option value="">All Locations</option>
+            <option>Tower 1</option><option>Tower 2</option><option>Tower 3</option>
+            <option>Tower 4</option><option>Tower 5</option><option>Tower 6</option>
+            <option>Tower 7</option><option>Tower 8</option><option>Tower 9</option>
+            <option>Pump House</option><option>Parking</option><option>Park 1</option><option>Park 2</option>
+          </select>
+          <select id="filter-category" class="filter-select" onchange="filterAssetTable()">
+            <option value="">All Categories</option>
+            <option>Electrical</option><option>Mechanical</option><option>Civil</option><option>Misc</option>
+          </select>
+          <select id="filter-condition" class="filter-select" onchange="filterAssetTable()">
+            <option value="">All Conditions</option>
+            <option>Good</option><option>Repair</option><option>Critical</option>
+          </select>
+          <select id="filter-status" class="filter-select" onchange="filterAssetTable()">
+            <option value="">All Status</option>
+            <option>Active</option><option>Under Repair</option><option>Scrap</option>
+          </select>
+          <button class="btn-ghost" onclick="clearFilters()">Clear</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="asset-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('id')">Asset ID <span class="sort-icon">↕</span></th>
+                <th onclick="sortTable('name')">Asset Name <span class="sort-icon">↕</span></th>
+                <th>Category</th>
+                <th>Location</th>
+                <th>Condition</th>
+                <th>Status</th>
+                <th>Warranty</th>
+                <th>AMC</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="asset-tbody"></tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span id="asset-count">Showing 0 assets</span>
+          <div class="pagination" id="asset-pagination"></div>
+        </div>
+      </div>
+
+      <!-- ADD ASSET PAGE -->
+      <div id="page-add-asset" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" id="asset-form-title">Add New Asset</h1>
+            <p class="page-subtitle">Fill in the details to register a new township asset</p>
+          </div>
+          <button class="btn-ghost" onclick="showPage('assets')">← Back to Registry</button>
+        </div>
+
+        <div class="form-layout">
+          <div class="form-main">
+            <!-- STEP INDICATOR -->
+            <div class="form-steps">
+              <div class="step active" data-step="1">
+                <div class="step-num">1</div>
+                <div class="step-label">Basic Info</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step" data-step="2">
+                <div class="step-num">2</div>
+                <div class="step-label">Location</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step" data-step="3">
+                <div class="step-num">3</div>
+                <div class="step-label">Warranty & AMC</div>
+              </div>
+              <div class="step-line"></div>
+              <div class="step" data-step="4">
+                <div class="step-num">4</div>
+                <div class="step-label">Documents</div>
+              </div>
+            </div>
+
+            <!-- STEP 1: BASIC INFO -->
+            <div class="form-step-content active" id="step-1">
+              <div class="form-card">
+                <h3 class="form-section-title">Core Information</h3>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label>Asset ID <span class="auto-badge">Auto</span></label>
+                    <input type="text" id="asset-id" class="form-input" readonly placeholder="AST-2024-001" value="">
+                  </div>
+                  <div class="form-group">
+                    <label>Asset Name <span class="required">*</span></label>
+                    <input type="text" id="asset-name" class="form-input" placeholder="e.g. Lift Motor Unit">
+                  </div>
+                  <div class="form-group">
+                    <label>Category <span class="required">*</span></label>
+                    <select id="asset-category" class="form-input" onchange="updateSubcategory()">
+                      <option value="">Select Category</option>
+                      <option>Electrical</option>
+                      <option>Mechanical</option>
+                      <option>Civil</option>
+                      <option>Misc</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Subcategory <span class="required">*</span></label>
+                    <select id="asset-subcategory" class="form-input">
+                      <option value="">Select subcategory first</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="asset-qty" class="form-input" value="1" min="1">
+                  </div>
+                  <div class="form-group">
+                    <label>Unit</label>
+                    <select id="asset-unit" class="form-input">
+                      <option>Nos</option><option>Set</option><option>Pair</option><option>KW</option><option>HP</option><option>KVA</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-card">
+                <h3 class="form-section-title">Identification</h3>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label>Brand / Make</label>
+                    <input type="text" id="asset-brand" class="form-input" placeholder="e.g. Schindler">
+                  </div>
+                  <div class="form-group">
+                    <label>Model Number</label>
+                    <input type="text" id="asset-model" class="form-input" placeholder="e.g. MRL-2020">
+                  </div>
+                  <div class="form-group">
+                    <label>Serial Number</label>
+                    <input type="text" id="asset-serial" class="form-input" placeholder="SN-XXXX-XXXX">
+                  </div>
+                  <div class="form-group">
+                    <label>Installation Date</label>
+                    <input type="date" id="asset-install-date" class="form-input">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-card">
+                <h3 class="form-section-title">Status & Financials</h3>
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label>Condition</label>
+                    <div class="radio-group">
+                      <label class="radio-opt good"><input type="radio" name="condition" value="Good" checked> Good</label>
+                      <label class="radio-opt repair"><input type="radio" name="condition" value="Repair"> Repair</label>
+                      <label class="radio-opt critical"><input type="radio" name="condition" value="Critical"> Critical</label>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Status</label>
+                    <select id="asset-status" class="form-input">
+                      <option>Active</option>
+                      <option>Under Repair</option>
+                      <option>Scrap</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Purchase Cost (₹)</label>
+                    <input type="number" id="asset-purchase-cost" class="form-input" placeholder="0">
+                  </div>
+                  <div class="form-group">
+                    <label>Replacement Cost (₹)</label>
+                    <input type="number" id="asset-replacement-cost" class="form-input" placeholder="0">
+                  </div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" onclick="nextStep(2)">Next: Location →</button>
+              </div>
+            </div>
+
+            <!-- STEP 2: LOCATION -->
+            <div class="form-step-content" id="step-2">
+              <div class="form-card">
+                <h3 class="form-section-title">Asset Location</h3>
+                <div class="location-picker">
+                  <div class="form-group">
+                    <label>Main Location <span class="required">*</span></label>
+                    <select id="main-location" class="form-input" onchange="updateSubLocation()">
+                      <option value="">Select main location</option>
+                      <optgroup label="Towers">
+                        <option>Tower 1</option><option>Tower 2</option><option>Tower 3</option>
+                        <option>Tower 4</option><option>Tower 5</option><option>Tower 6</option>
+                        <option>Tower 7</option><option>Tower 8</option><option>Tower 9</option>
+                      </optgroup>
+                      <optgroup label="Common">
+                        <option>Pump House</option>
+                        <option>Parking (Cellar)</option>
+                        <option>Parking (Stilt)</option>
+                        <option>Park 1</option>
+                        <option>Park 2</option>
+                        <option>Common Area</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div class="form-group" id="sub-location-wrap">
+                    <label>Sub Location</label>
+                    <select id="sub-location" class="form-input">
+                      <option value="">Select main location first</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="location-visual" id="location-visual">
+                  <div class="location-placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <p>Select a location to see details</p>
+                  </div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-ghost" onclick="prevStep(1)">← Back</button>
+                <button class="btn-primary" onclick="nextStep(3)">Next: Warranty & AMC →</button>
+              </div>
+            </div>
+
+            <!-- STEP 3: WARRANTY & AMC -->
+            <div class="form-step-content" id="step-3">
+              <div class="form-card">
+                <h3 class="form-section-title">Warranty Information</h3>
+                <div class="toggle-section">
+                  <label class="toggle-label">
+                    <span>Warranty Available?</span>
+                    <div class="toggle-switch">
+                      <input type="checkbox" id="warranty-toggle" onchange="toggleWarrantyFields()">
+                      <span class="toggle-slider"></span>
+                    </div>
+                  </label>
+                </div>
+                <div id="warranty-fields" class="fields-hidden">
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label>Warranty Type</label>
+                      <select id="warranty-type" class="form-input">
+                        <option>Manufacturer</option><option>Vendor</option><option>Extended</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Warranty Provider</label>
+                      <input type="text" id="warranty-provider" class="form-input" placeholder="Company name">
+                    </div>
+                    <div class="form-group">
+                      <label>Start Date</label>
+                      <input type="date" id="warranty-start" class="form-input" onchange="calcWarrantyStatus()">
+                    </div>
+                    <div class="form-group">
+                      <label>End Date</label>
+                      <input type="date" id="warranty-end" class="form-input" onchange="calcWarrantyStatus()">
+                    </div>
+                    <div class="form-group">
+                      <label>Support Contact</label>
+                      <input type="tel" id="warranty-contact" class="form-input" placeholder="+91 XXXXX XXXXX">
+                    </div>
+                    <div class="form-group">
+                      <label>Warranty Status</label>
+                      <div id="warranty-status-display" class="status-display">Set dates to auto-calculate</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-card">
+                <h3 class="form-section-title">AMC Details</h3>
+                <div class="toggle-section">
+                  <label class="toggle-label">
+                    <span>AMC Required?</span>
+                    <div class="toggle-switch">
+                      <input type="checkbox" id="amc-toggle" onchange="toggleAmcFields()">
+                      <span class="toggle-slider"></span>
+                    </div>
+                  </label>
+                </div>
+                <div id="amc-fields" class="fields-hidden">
+                  <div class="form-grid-2">
+                    <div class="form-group">
+                      <label>Vendor Name</label>
+                      <input type="text" id="amc-vendor" class="form-input" placeholder="Vendor company">
+                    </div>
+                    <div class="form-group">
+                      <label>AMC Type</label>
+                      <select id="amc-type" class="form-input">
+                        <option>Comprehensive</option><option>Non-Comprehensive</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>AMC Start Date</label>
+                      <input type="date" id="amc-start" class="form-input" onchange="calcAmcStatus()">
+                    </div>
+                    <div class="form-group">
+                      <label>AMC End Date</label>
+                      <input type="date" id="amc-end" class="form-input" onchange="calcAmcStatus()">
+                    </div>
+                    <div class="form-group">
+                      <label>AMC Cost (₹/year)</label>
+                      <input type="number" id="amc-cost" class="form-input" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                      <label>Service Frequency</label>
+                      <select id="amc-frequency" class="form-input">
+                        <option>Monthly</option><option>Quarterly</option><option>Half-Yearly</option><option>Yearly</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label>Last Service Date</label>
+                      <input type="date" id="amc-last-service" class="form-input" onchange="calcNextService()">
+                    </div>
+                    <div class="form-group">
+                      <label>Next Service Due</label>
+                      <input type="text" id="amc-next-service" class="form-input" readonly placeholder="Auto-calculated">
+                    </div>
+                    <div class="form-group">
+                      <label>Vendor Contact</label>
+                      <input type="tel" id="amc-contact" class="form-input" placeholder="+91 XXXXX XXXXX">
+                    </div>
+                    <div class="form-group">
+                      <label>AMC Status</label>
+                      <div id="amc-status-display" class="status-display">Set dates to auto-calculate</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-ghost" onclick="prevStep(2)">← Back</button>
+                <button class="btn-primary" onclick="nextStep(4)">Next: Documents →</button>
+              </div>
+            </div>
+
+            <!-- STEP 4: DOCUMENTS -->
+            <div class="form-step-content" id="step-4">
+              <div class="form-card">
+                <h3 class="form-section-title">Documents & Media</h3>
+                <div class="upload-grid">
+                  <div class="upload-zone" id="upload-image" onclick="simulateUpload('image')">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-label">Asset Photo</div>
+                    <div class="upload-sub">Click to upload or drag & drop</div>
+                    <div class="upload-hint">JPG, PNG up to 5MB</div>
+                    <div class="upload-status" id="upload-image-status"></div>
+                  </div>
+                  <div class="upload-zone" id="upload-invoice" onclick="simulateUpload('invoice')">
+                    <div class="upload-icon">🧾</div>
+                    <div class="upload-label">Purchase Invoice</div>
+                    <div class="upload-sub">Click to upload or drag & drop</div>
+                    <div class="upload-hint">PDF, JPG up to 10MB</div>
+                    <div class="upload-status" id="upload-invoice-status"></div>
+                  </div>
+                  <div class="upload-zone" id="upload-warranty-doc" onclick="simulateUpload('warranty-doc')">
+                    <div class="upload-icon">📜</div>
+                    <div class="upload-label">Warranty Certificate</div>
+                    <div class="upload-sub">Click to upload or drag & drop</div>
+                    <div class="upload-hint">PDF up to 10MB</div>
+                    <div class="upload-status" id="upload-warranty-doc-status"></div>
+                  </div>
+                  <div class="upload-zone" id="upload-amc-doc" onclick="simulateUpload('amc-doc')">
+                    <div class="upload-icon">📋</div>
+                    <div class="upload-label">AMC Agreement</div>
+                    <div class="upload-sub">Click to upload or drag & drop</div>
+                    <div class="upload-hint">PDF up to 10MB</div>
+                    <div class="upload-status" id="upload-amc-doc-status"></div>
+                  </div>
+                </div>
+                <div class="form-group" style="margin-top:1.5rem">
+                  <label>Notes / Remarks</label>
+                  <textarea id="asset-notes" class="form-input" rows="4" placeholder="Any additional information about this asset..."></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-ghost" onclick="prevStep(3)">← Back</button>
+                <button class="btn-success" onclick="saveAsset()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  Save Asset
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- FORM SIDEBAR -->
+          <div class="form-sidebar">
+            <div class="form-help-card">
+              <h4>Quick Guide</h4>
+              <div class="help-steps" id="form-help-steps">
+                <div class="help-step active">
+                  <div class="help-step-num">1</div>
+                  <div class="help-step-text">Enter the asset name and category to auto-generate an ID</div>
+                </div>
+                <div class="help-step">
+                  <div class="help-step-num">2</div>
+                  <div class="help-step-text">Select the tower and specific location where the asset is installed</div>
+                </div>
+                <div class="help-step">
+                  <div class="help-step-num">3</div>
+                  <div class="help-step-text">Add warranty and AMC details — status will auto-calculate</div>
+                </div>
+                <div class="help-step">
+                  <div class="help-step-num">4</div>
+                  <div class="help-step-text">Upload photos and documents for complete audit trail</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-preview-card">
+              <h4>Asset Preview</h4>
+              <div class="preview-id" id="preview-id">ID will appear here</div>
+              <div class="preview-name" id="preview-name">Asset name</div>
+              <div class="preview-location" id="preview-location">Location not set</div>
+              <div class="preview-condition" id="preview-condition">
+                <span class="condition-dot good"></span> Good Condition
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WARRANTY PAGE -->
+      <div id="page-warranty" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Warranty Management</h1>
+            <p class="page-subtitle">Track and manage all asset warranties</p>
+          </div>
+          <button class="btn-primary" onclick="showPage('add-asset');nextStep(3)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Warranty
+          </button>
+        </div>
+
+        <div class="status-tabs">
+          <button class="status-tab active" onclick="filterWarranty('all', this)">All</button>
+          <button class="status-tab" onclick="filterWarranty('active', this)">Active <span class="tab-count">142</span></button>
+          <button class="status-tab warning" onclick="filterWarranty('expiring', this)">Expiring Soon <span class="tab-count">8</span></button>
+          <button class="status-tab danger" onclick="filterWarranty('expired', this)">Expired <span class="tab-count">34</span></button>
+        </div>
+
+        <div class="warranty-grid" id="warranty-grid"></div>
+      </div>
+
+      <!-- AMC PAGE -->
+      <div id="page-amc" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">AMC Tracker</h1>
+            <p class="page-subtitle">Annual Maintenance Contract monitoring</p>
+          </div>
+          <button class="btn-primary" onclick="showPage('add-asset');nextStep(3)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add AMC
+          </button>
+        </div>
+
+        <div class="amc-summary-bar">
+          <div class="amc-stat">
+            <div class="amc-stat-num">67</div>
+            <div class="amc-stat-lbl">Active AMCs</div>
+          </div>
+          <div class="amc-stat warning">
+            <div class="amc-stat-num">5</div>
+            <div class="amc-stat-lbl">Expiring in 30 days</div>
+          </div>
+          <div class="amc-stat">
+            <div class="amc-stat-num">₹18.4L</div>
+            <div class="amc-stat-lbl">Total Annual Cost</div>
+          </div>
+          <div class="amc-stat">
+            <div class="amc-stat-num">12</div>
+            <div class="amc-stat-lbl">Services Due This Month</div>
+          </div>
+        </div>
+
+        <div class="status-tabs">
+          <button class="status-tab active" onclick="filterAmc('all', this)">All</button>
+          <button class="status-tab" onclick="filterAmc('active', this)">Active</button>
+          <button class="status-tab warning" onclick="filterAmc('expiring', this)">Expiring Soon</button>
+          <button class="status-tab danger" onclick="filterAmc('expired', this)">Expired</button>
+          <button class="status-tab" onclick="filterAmc('service-due', this)">Service Due</button>
+        </div>
+
+        <div class="amc-table-wrap">
+          <table class="data-table" id="amc-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Vendor</th>
+                <th>Type</th>
+                <th>AMC Period</th>
+                <th>Cost/Year</th>
+                <th>Last Service</th>
+                <th>Next Due</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="amc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TASKS PAGE -->
+      <div id="page-tasks" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Maintenance Tasks</h1>
+            <p class="page-subtitle">Daily operations and work orders</p>
+          </div>
+          <button class="btn-primary" onclick="openTaskModal()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Task
+          </button>
+        </div>
+
+        <div class="task-board">
+          <div class="task-column">
+            <div class="task-col-header open">
+              <div class="col-title">Open</div>
+              <div class="col-badge" id="open-count">0</div>
+            </div>
+            <div class="task-cards" id="col-open"></div>
+          </div>
+          <div class="task-column">
+            <div class="task-col-header inprogress">
+              <div class="col-title">In Progress</div>
+              <div class="col-badge" id="inprogress-count">0</div>
+            </div>
+            <div class="task-cards" id="col-inprogress"></div>
+          </div>
+          <div class="task-column">
+            <div class="task-col-header completed">
+              <div class="col-title">Completed</div>
+              <div class="col-badge" id="completed-count">0</div>
+            </div>
+            <div class="task-cards" id="col-completed"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CALENDAR PAGE -->
+      <div id="page-calendar" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Service Calendar</h1>
+            <p class="page-subtitle">AMC schedules and maintenance tasks overview</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-ghost" onclick="prevMonth()">← Prev</button>
+            <span class="calendar-month-label" id="cal-month-label"></span>
+            <button class="btn-ghost" onclick="nextMonth()">Next →</button>
+          </div>
+        </div>
+        <div class="calendar-legend">
+          <span class="cal-legend-item amc">AMC Service</span>
+          <span class="cal-legend-item task">Maintenance Task</span>
+          <span class="cal-legend-item overdue">Overdue</span>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <div class="cal-event-panel" id="cal-event-panel"></div>
+      </div>
+
+      <!-- ALERTS PAGE -->
+      <div id="page-alerts" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Alerts & Notifications</h1>
+            <p class="page-subtitle">System-wide alerts requiring attention</p>
+          </div>
+          <button class="btn-ghost" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="alerts-page-list" id="alerts-page-list"></div>
+      </div>
+
+      <!-- REPORTS PAGE -->
+      <div id="page-reports" class="page">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Reports & Analytics</h1>
+            <p class="page-subtitle">Generate and export data reports</p>
+          </div>
+        </div>
+        <div class="report-cards" id="report-cards">
+          <div class="report-card" onclick="generateReport('full')">
+            <div class="report-icon">📊</div>
+            <h3>Full Asset Report</h3>
+            <p>Complete inventory with all asset details, conditions, and locations</p>
+            <div class="report-meta">847 records · Excel format</div>
+            <button class="btn-report">Generate Report</button>
+          </div>
+          <div class="report-card" onclick="generateReport('tower')">
+            <div class="report-icon">🏢</div>
+            <h3>Tower-wise Report</h3>
+            <p>Asset breakdown by tower with counts and conditions</p>
+            <div class="report-meta">9 towers · Excel format</div>
+            <button class="btn-report">Generate Report</button>
+          </div>
+          <div class="report-card" onclick="generateReport('amc')">
+            <div class="report-icon">📋</div>
+            <h3>AMC Report</h3>
+            <p>All AMC contracts, service history, and upcoming renewals</p>
+            <div class="report-meta">67 AMCs · Excel format</div>
+            <button class="btn-report">Generate Report</button>
+          </div>
+          <div class="report-card" onclick="generateReport('warranty')">
+            <div class="report-icon">🛡️</div>
+            <h3>Warranty Report</h3>
+            <p>Active warranties, expiry timeline, and claim history</p>
+            <div class="report-meta">142 active · Excel format</div>
+            <button class="btn-report">Generate Report</button>
+          </div>
+          <div class="report-card" onclick="generateReport('maintenance')">
+            <div class="report-icon">🔧</div>
+            <h3>Maintenance History</h3>
+            <p>Complete task log with before/after photos and notes</p>
+            <div class="report-meta">189 tasks · Excel format</div>
+            <button class="btn-report">Generate Report</button>
+          </div>
+          <div class="report-card" onclick="generateReport('critical')">
+            <div class="report-icon">⚠️</div>
+            <h3>Critical Assets Report</h3>
+            <p>All assets in critical condition needing immediate action</p>
+            <div class="report-meta">23 critical · Excel format</div>
+            <button class="btn-report">Generate Report</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end page-container -->
+  </main>
+</div>
+
+<!-- ASSET DETAIL MODAL -->
+<div class="modal-overlay" id="asset-modal" onclick="closeModal('asset-modal')">
+  <div class="modal large" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('asset-modal')">×</button>
+    <div id="asset-modal-content"></div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="task-modal" onclick="closeModal('task-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('task-modal')">×</button>
+    <h2 class="modal-title">Create Maintenance Task</h2>
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label>Asset</label>
+        <select id="task-asset" class="form-input">
+          <option value="">Select asset</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Issue Type</label>
+        <select id="task-issue" class="form-input">
+          <option>Breakdown</option><option>Preventive</option><option>Inspection</option><option>AMC Service</option><option>Emergency</option>
+        </select>
+      </div>
+      <div class="form-group span-2">
+        <label>Description</label>
+        <textarea id="task-desc" class="form-input" rows="3" placeholder="Describe the issue..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Assigned Worker</label>
+        <select id="task-worker" class="form-input">
+          <option>Ramesh Kumar</option><option>Sanjay Singh</option><option>Mohammed Ali</option><option>Arjun Patel</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="task-priority" class="form-input">
+          <option>Normal</option><option>High</option><option>Urgent</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('task-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveTask()">Create Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
