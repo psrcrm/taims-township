@@ -1987,6 +1987,48 @@ textarea.form-input { resize: vertical; }
 ::-webkit-scrollbar-thumb { background: var(--slate-300); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--slate-400); }
 
+/* ============ API STATUS ============ */
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.5rem 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.api-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.4s;
+}
+.api-dot.online {
+  background: var(--green-400);
+  box-shadow: 0 0 6px rgba(52,211,153,0.6);
+  animation: pulse-green 2s infinite;
+}
+.api-dot.offline {
+  background: var(--amber-400);
+  box-shadow: 0 0 6px rgba(251,191,36,0.4);
+  animation: pulse-amber 2s infinite;
+}
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 4px rgba(52,211,153,0.4); }
+  50% { box-shadow: 0 0 10px rgba(52,211,153,0.8); }
+}
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 4px rgba(251,191,36,0.3); }
+  50% { box-shadow: 0 0 8px rgba(251,191,36,0.6); }
+}
+.api-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
 /* ASSET MODAL QR */
 .qr-placeholder {
   width: 100px;
