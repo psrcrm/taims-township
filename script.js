@@ -1,7 +1,64 @@
 /* ====================================================
    TAIMS — Complete Application Logic
-   Modular JS: Auth → Data → UI → Interactions
+   Live Backend: Google Apps Script
+   API: https://script.google.com/macros/s/AKfycbyCG2KtZToPkWb-W7mr0dQUzNleH3j7lYJfmmGKtXZWM2vUICdwlmk4CebgqsiIID-vqw/exec
 ==================================================== */
+
+// ============ LIVE API CONFIGURATION ============
+const API_URL = 'https://script.google.com/macros/s/AKfycbyCG2KtZToPkWb-W7mr0dQUzNleH3j7lYJfmmGKtXZWM2vUICdwlmk4CebgqsiIID-vqw/exec';
+let API_TOKEN = null;
+let BACKEND_AVAILABLE = false; // flips true after first successful ping
+
+// Core API caller — handles CORS via no-cors fetch + JSON parse
+async function callAPI(action, data = {}) {
+  try {
+    const body = { action, data };
+    if (API_TOKEN) body.token = API_TOKEN;
+
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // GAS requires text/plain for CORS
+      body: JSON.stringify(body),
+      redirect: 'follow'
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.success !== false) BACKEND_AVAILABLE = true;
+    return json;
+  } catch (err) {
+    console.warn(`[TAIMS API] ${action} failed:`, err.message);
+    return { success: false, error: err.message, offline: true };
+  }
+}
+
+// GET via URL params (for simple reads — avoids preflight)
+async function callAPIGet(action, params = {}) {
+  try {
+    const qs = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${API_URL}?${qs}`, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.success !== false) BACKEND_AVAILABLE = true;
+    return json;
+  } catch (err) {
+    console.warn(`[TAIMS API GET] ${action} failed:`, err.message);
+    return { success: false, error: err.message, offline: true };
+  }
+}
+
+function showAPIStatus(ok) {
+  const indicator = document.getElementById('api-status');
+  const label = document.getElementById('api-label');
+  if (indicator) {
+    indicator.className = `api-dot ${ok ? 'online' : 'offline'}`;
+    indicator.title = ok ? 'Live — Google Sheets connected' : 'Demo mode — Google Sheets not connected';
+  }
+  if (label) {
+    label.textContent = ok ? 'Live — Google Sheets' : 'Demo mode';
+    label.style.color = ok ? 'rgba(52,211,153,0.8)' : 'rgba(255,255,255,0.35)';
+  }
+}
 
 // ============ DATA LAYER ============
 const USERS = {
@@ -201,33 +258,65 @@ function quickLogin(role) {
   document.getElementById('login-password').value = u.password;
 }
 
-function doLogin() {
-  const email = document.getElementById('login-email').value;
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
+  const btn = document.querySelector('.btn-login');
+
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
+  // Try live backend first
+  const result = await callAPI('login', { email, password });
 
   let found = null;
-  for (let [role, user] of Object.entries(USERS)) {
-    if (user.email === email && user.password === password) { found = { ...user, role }; break; }
+
+  if (result.success && result.user) {
+    // ✅ Live login succeeded
+    API_TOKEN = result.token || null;
+    found = result.user;
+    found.role = result.user.role || 'admin';
+    BACKEND_AVAILABLE = true;
+    showToast('Connected to Google Sheets ✓', 'success');
+  } else {
+    // 🔄 Fallback: demo mode (offline or sheet not yet set up)
+    for (let [role, user] of Object.entries(USERS)) {
+      if (user.email === email && user.password === password) { found = { ...user, role }; break; }
+    }
+    // Quick-login chips: match by role keyword in email
+    if (!found) {
+      for (let [role, user] of Object.entries(USERS)) {
+        if (email.includes(role) || email === '') { found = { ...user, role }; break; }
+      }
+    }
+    if (!found) found = { ...USERS.admin, role: 'admin' };
+
+    if (result.offline) {
+      showToast('Offline mode — using demo data', 'warning');
+    } else if (!result.success && result.error && !result.offline) {
+      showToast('Invalid credentials', 'error');
+      btn.textContent = 'Sign In';
+      btn.disabled = false;
+      return;
+    }
   }
 
-  if (!found) {
-    // try quick demo
-    for (let [role, user] of Object.entries(USERS)) {
-      if (email.includes(role) || email === '') { found = { ...user, role }; break; }
-    }
-    if (!found) { found = { ...USERS.admin, role: 'admin' }; }
-  }
+  btn.textContent = 'Sign In';
+  btn.disabled = false;
 
   currentUser = found;
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
 
-  document.getElementById('user-name').textContent = found.name;
-  document.getElementById('user-role').textContent = found.role === 'admin' ? 'Administrator' : found.role.charAt(0).toUpperCase() + found.role.slice(1);
-  document.getElementById('user-avatar').textContent = found.name.split(' ').map(n=>n[0]).join('').slice(0,2);
-  document.getElementById('greeting-name').textContent = found.name.split(' ')[0];
+  document.getElementById('user-name').textContent = found.name || found.NAME || 'User';
+  const roleName = (found.role || 'admin');
+  document.getElementById('user-role').textContent = roleName === 'admin' ? 'Administrator' : roleName.charAt(0).toUpperCase() + roleName.slice(1);
+  document.getElementById('user-avatar').textContent = (found.name || found.NAME || 'U').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('greeting-name').textContent = (found.name || found.NAME || 'there').split(' ')[0];
 
-  if (found.role === 'worker') {
+  showAPIStatus(BACKEND_AVAILABLE);
+
+  if (roleName === 'worker') {
     document.getElementById('nav-add-asset').style.display = 'none';
   }
 
@@ -281,8 +370,71 @@ function toggleSidebar() {
   }
 }
 
-// ============ INIT ============
-function initApp() {
+async function initApp() {
+  // Try to load live data from Google Sheets
+  showAPIStatus(false);
+  try {
+    const [assetRes, taskRes, statsRes] = await Promise.all([
+      callAPI('getAssets', {}),
+      callAPI('getTasks', {}),
+      callAPI('getDashboardStats', {})
+    ]);
+
+    if (assetRes.success && assetRes.data && assetRes.data.length > 0) {
+      // Map sheet column names → local camelCase keys
+      ASSETS = assetRes.data.map(a => ({
+        id: a.ASSET_ID, name: a.ASSET_NAME,
+        category: a.CATEGORY, subcategory: a.SUBCATEGORY,
+        mainLocation: a.MAIN_LOCATION, subLocation: a.SUB_LOCATION,
+        brand: a.BRAND, model: a.MODEL, serial: a.SERIAL_NO,
+        installDate: a.INSTALL_DATE, condition: a.CONDITION, status: a.STATUS,
+        purchaseCost: Number(a.PURCHASE_COST) || 0,
+        replacementCost: Number(a.REPLACEMENT_COST) || 0,
+        quantity: a.QUANTITY || 1, unit: a.UNIT || 'Nos',
+        warrantyAvailable: a.WARRANTY_AVAILABLE === 'Yes',
+        warrantyType: a.WARRANTY_TYPE, warrantyProvider: a.WARRANTY_PROVIDER,
+        warrantyStart: a.WARRANTY_START, warrantyEnd: a.WARRANTY_END,
+        warrantyContact: a.WARRANTY_CONTACT,
+        warrantyStatus: a.WARRANTY_STATUS || 'N/A',
+        amcRequired: a.AMC_REQUIRED === 'Yes',
+        amcVendor: a.AMC_VENDOR, amcType: a.AMC_TYPE,
+        amcStart: a.AMC_START, amcEnd: a.AMC_END,
+        amcCost: Number(a.AMC_COST) || 0,
+        amcFrequency: a.AMC_FREQUENCY,
+        amcStatus: a.AMC_STATUS || 'N/A',
+        notes: a.NOTES, addedDate: a.CREATED_AT
+      }));
+      showToast(`Loaded ${ASSETS.length} assets from Google Sheets`, 'success');
+      showAPIStatus(true);
+    }
+
+    if (taskRes.success && taskRes.data && taskRes.data.length > 0) {
+      // Replace demo tasks with live ones — keep demo if sheet empty
+      const liveTasks = taskRes.data.map(t => ({
+        id: t.TASK_ID, assetId: t.ASSET_ID, assetName: t.ASSET_NAME,
+        issue: t.ISSUE_TYPE, desc: t.DESCRIPTION,
+        worker: t.ASSIGNED_WORKER, status: t.STATUS,
+        priority: t.PRIORITY || 'Normal',
+        date: t.TASK_DATE, location: t.ASSET_NAME
+      }));
+      if (liveTasks.length > 0) {
+        TASKS_DATA.length = 0;
+        liveTasks.forEach(t => TASKS_DATA.push(t));
+      }
+    }
+
+    // Update KPI badges from live stats
+    if (statsRes.success && statsRes.stats) {
+      const s = statsRes.stats;
+      document.getElementById('alert-badge').textContent = s.expiringWarranty + s.expiringAmc || '0';
+      document.getElementById('task-badge').textContent = s.pendingTasks || '0';
+    }
+
+  } catch (err) {
+    console.warn('[TAIMS] Could not load live data:', err);
+  }
+
+  // Always render dashboard (with live or demo data)
   renderTowerGrid();
   renderDashboardAlerts();
   renderRecentActivity();
@@ -827,45 +979,99 @@ function simulateUpload(type) {
   showToast('File selected — will upload on save', 'success');
 }
 
-function saveAsset() {
-  const name = document.getElementById('asset-name')?.value;
+async function saveAsset() {
+  const name = document.getElementById('asset-name')?.value?.trim();
   if (!name) { showToast('Please enter an asset name', 'error'); return; }
 
-  const id = document.getElementById('asset-id')?.value;
+  const btn = document.querySelector('#step-4 .btn-success');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
 
+  const warrantyOn = document.getElementById('warranty-toggle')?.checked;
+  const amcOn = document.getElementById('amc-toggle')?.checked;
+
+  const payload = {
+    ASSET_NAME: name,
+    CATEGORY: document.getElementById('asset-category')?.value || 'Misc',
+    SUBCATEGORY: document.getElementById('asset-subcategory')?.value || '',
+    MAIN_LOCATION: document.getElementById('main-location')?.value || 'Common Area',
+    SUB_LOCATION: document.getElementById('sub-location')?.value || '',
+    BRAND: document.getElementById('asset-brand')?.value || '',
+    MODEL: document.getElementById('asset-model')?.value || '',
+    SERIAL_NO: document.getElementById('asset-serial')?.value || '',
+    INSTALL_DATE: document.getElementById('asset-install-date')?.value || '',
+    CONDITION: document.querySelector('input[name="condition"]:checked')?.value || 'Good',
+    STATUS: document.getElementById('asset-status')?.value || 'Active',
+    PURCHASE_COST: parseInt(document.getElementById('asset-purchase-cost')?.value) || 0,
+    REPLACEMENT_COST: parseInt(document.getElementById('asset-replacement-cost')?.value) || 0,
+    QUANTITY: parseInt(document.getElementById('asset-qty')?.value) || 1,
+    UNIT: document.getElementById('asset-unit')?.value || 'Nos',
+    WARRANTY_AVAILABLE: warrantyOn ? 'Yes' : 'No',
+    WARRANTY_TYPE: warrantyOn ? (document.getElementById('warranty-type')?.value || '') : '',
+    WARRANTY_START: warrantyOn ? (document.getElementById('warranty-start')?.value || '') : '',
+    WARRANTY_END: warrantyOn ? (document.getElementById('warranty-end')?.value || '') : '',
+    WARRANTY_PROVIDER: warrantyOn ? (document.getElementById('warranty-provider')?.value || '') : '',
+    WARRANTY_CONTACT: warrantyOn ? (document.getElementById('warranty-contact')?.value || '') : '',
+    AMC_REQUIRED: amcOn ? 'Yes' : 'No',
+    AMC_VENDOR: amcOn ? (document.getElementById('amc-vendor')?.value || '') : '',
+    AMC_TYPE: amcOn ? (document.getElementById('amc-type')?.value || '') : '',
+    AMC_START: amcOn ? (document.getElementById('amc-start')?.value || '') : '',
+    AMC_END: amcOn ? (document.getElementById('amc-end')?.value || '') : '',
+    AMC_COST: amcOn ? (parseInt(document.getElementById('amc-cost')?.value) || 0) : 0,
+    AMC_FREQUENCY: amcOn ? (document.getElementById('amc-frequency')?.value || '') : '',
+    AMC_LAST_SERVICE: amcOn ? (document.getElementById('amc-last-service')?.value || '') : '',
+    AMC_CONTACT: amcOn ? (document.getElementById('amc-contact')?.value || '') : '',
+    NOTES: document.getElementById('asset-notes')?.value || '',
+    ADDED_BY: currentUser?.email || currentUser?.EMAIL || 'admin'
+  };
+
+  let result;
   if (editingAssetId) {
-    const idx = ASSETS.findIndex(a => a.id === editingAssetId);
-    if (idx >= 0) {
-      ASSETS[idx].name = name;
-      ASSETS[idx].brand = document.getElementById('asset-brand')?.value || '';
-      ASSETS[idx].model = document.getElementById('asset-model')?.value || '';
-    }
-    showToast('Asset updated successfully', 'success');
+    payload.ASSET_ID = editingAssetId;
+    result = await callAPI('updateAsset', payload);
   } else {
-    const newAsset = {
-      id, name,
-      category: document.getElementById('asset-category')?.value || 'Misc',
-      subcategory: document.getElementById('asset-subcategory')?.value || '',
-      mainLocation: document.getElementById('main-location')?.value || 'Common Area',
-      subLocation: document.getElementById('sub-location')?.value || '',
-      brand: document.getElementById('asset-brand')?.value || '',
-      model: document.getElementById('asset-model')?.value || '',
-      serial: `SN-${Math.random().toString(36).slice(2,8).toUpperCase()}`,
-      installDate: document.getElementById('asset-install-date')?.value || new Date().toISOString().split('T')[0],
-      condition: document.querySelector('input[name="condition"]:checked')?.value || 'Good',
-      status: document.getElementById('asset-status')?.value || 'Active',
-      purchaseCost: parseInt(document.getElementById('asset-purchase-cost')?.value) || 0,
-      replacementCost: parseInt(document.getElementById('asset-replacement-cost')?.value) || 0,
-      quantity: 1, unit: 'Nos',
-      warrantyAvailable: document.getElementById('warranty-toggle')?.checked || false,
-      warrantyStatus: 'N/A', amcRequired: false, amcStatus: 'N/A',
-      addedDate: new Date().toISOString().split('T')[0]
-    };
-    ASSETS.push(newAsset);
-    showToast('Asset added successfully! 🎉', 'success');
+    result = await callAPI('addAsset', payload);
   }
 
-  setTimeout(() => showPage('assets'), 500);
+  if (btn) { btn.textContent = '💾 Save Asset'; btn.disabled = false; }
+
+  if (result.success) {
+    // Also update local demo array for instant UI refresh
+    if (!editingAssetId) {
+      const newId = result.assetId || document.getElementById('asset-id')?.value;
+      ASSETS.push({
+        id: newId, name, ...payload,
+        category: payload.CATEGORY, subcategory: payload.SUBCATEGORY,
+        mainLocation: payload.MAIN_LOCATION, subLocation: payload.SUB_LOCATION,
+        brand: payload.BRAND, model: payload.MODEL, condition: payload.CONDITION,
+        status: payload.STATUS, purchaseCost: payload.PURCHASE_COST,
+        warrantyAvailable: warrantyOn, warrantyStatus: warrantyOn ? 'active' : 'N/A',
+        amcRequired: amcOn, amcStatus: amcOn ? 'active' : 'N/A',
+        serial: payload.SERIAL_NO, installDate: payload.INSTALL_DATE,
+        addedDate: new Date().toISOString().split('T')[0]
+      });
+      showToast(`Asset saved to Google Sheets! ID: ${result.assetId || 'auto'}`, 'success');
+    } else {
+      showToast('Asset updated in Google Sheets ✓', 'success');
+    }
+  } else if (result.offline) {
+    // Offline — save locally only
+    if (!editingAssetId) {
+      const id = document.getElementById('asset-id')?.value;
+      ASSETS.push({ id, name, category: payload.CATEGORY, subcategory: payload.SUBCATEGORY,
+        mainLocation: payload.MAIN_LOCATION, subLocation: payload.SUB_LOCATION,
+        brand: payload.BRAND, model: payload.MODEL, condition: payload.CONDITION,
+        status: payload.STATUS, purchaseCost: payload.PURCHASE_COST,
+        warrantyAvailable: warrantyOn, warrantyStatus: 'N/A',
+        amcRequired: amcOn, amcStatus: 'N/A', addedDate: new Date().toISOString().split('T')[0]
+      });
+    }
+    showToast('Saved locally (offline). Will sync when connected.', 'warning');
+  } else {
+    showToast('Error saving: ' + (result.error || 'Unknown error'), 'error');
+    return;
+  }
+
+  setTimeout(() => showPage('assets'), 600);
 }
 
 // ============ WARRANTY ============
@@ -1011,26 +1217,47 @@ function openTaskModal(assetId) {
   openModal('task-modal');
 }
 
-function saveTask() {
-  const asset = document.getElementById('task-asset')?.value;
-  const desc = document.getElementById('task-desc')?.value;
-  if (!asset || !desc) { showToast('Please fill in required fields', 'error'); return; }
+async function saveTask() {
+  const assetId = document.getElementById('task-asset')?.value;
+  const desc = document.getElementById('task-desc')?.value?.trim();
+  if (!assetId || !desc) { showToast('Please fill in required fields', 'error'); return; }
 
-  const id = `TSK-${String(TASKS_DATA.length + 1).padStart(3,'0')}`;
+  const btn = document.querySelector('#task-modal .btn-primary');
+  if (btn) { btn.textContent = 'Creating…'; btn.disabled = true; }
+
+  const assetName = ASSETS.find(a => a.id === assetId)?.name || '';
+  const payload = {
+    ASSET_ID: assetId,
+    ASSET_NAME: assetName,
+    ISSUE_TYPE: document.getElementById('task-issue')?.value || 'Breakdown',
+    DESCRIPTION: desc,
+    ASSIGNED_WORKER: document.getElementById('task-worker')?.value || 'Unassigned',
+    PRIORITY: document.getElementById('task-priority')?.value || 'Normal',
+    SUPERVISOR: currentUser?.name || '',
+    CREATED_BY: currentUser?.email || ''
+  };
+
+  const result = await callAPI('addTask', payload);
+
+  if (btn) { btn.textContent = 'Create Task'; btn.disabled = false; }
+
+  const id = (result.success && result.taskId) ? result.taskId : `TSK-${String(TASKS_DATA.length+1).padStart(3,'0')}`;
+
   TASKS_DATA.push({
-    id, assetId: asset,
-    assetName: ASSETS.find(a => a.id === asset)?.name || '',
-    issue: document.getElementById('task-issue')?.value || 'Breakdown',
-    desc,
-    worker: document.getElementById('task-worker')?.value || 'Unassigned',
+    id, assetId, assetName,
+    issue: payload.ISSUE_TYPE, desc,
+    worker: payload.ASSIGNED_WORKER,
     status: 'Open',
-    priority: document.getElementById('task-priority')?.value || 'Normal',
+    priority: payload.PRIORITY,
     date: new Date().toISOString().split('T')[0],
     location: ''
   });
 
   closeModal('task-modal');
-  showToast('Task created successfully!', 'success');
+  if (result.success) showToast(`Task ${id} created in Google Sheets ✓`, 'success');
+  else if (result.offline) showToast(`Task created locally (offline)`, 'warning');
+  else showToast('Task created', 'success');
+
   document.getElementById('task-badge').textContent = TASKS_DATA.filter(t => t.status === 'Open').length;
   if (document.getElementById('page-tasks')?.classList.contains('active')) renderTaskBoard();
 }
