@@ -1283,7 +1283,7 @@ textarea.form-input { resize: vertical; }
   cursor: pointer;
   transition: var(--transition);
 }
-.upload-zone:hover {
+.upload-zone:hover, .upload-zone.drag-over {
   border-color: var(--cyan-500);
   background: rgba(14,165,233,0.03);
 }
