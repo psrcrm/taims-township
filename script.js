@@ -969,14 +969,42 @@ function calcNextService() {
   nextEl.value = lastDate.toISOString().split('T')[0];
 }
 
-function simulateUpload(type) {
-  const el = document.getElementById(`upload-${type}`);
-  const status = document.getElementById(`upload-${type}-status`);
-  if (!el) return;
+// Holds selected File objects keyed by upload type
+const selectedFiles = {};
 
-  el.classList.add('uploaded');
-  if (status) { status.textContent = '✓ File ready to upload to Google Drive'; }
-  showToast('File selected — will upload on save', 'success');
+function triggerFileInput(inputId) {
+  const input = document.getElementById(inputId);
+  if (input) input.click();
+}
+
+function handleFileSelect(input, type, maxMB) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  // Size check
+  if (file.size > maxMB * 1024 * 1024) {
+    showToast(`File too large. Maximum size is ${maxMB}MB.`, 'error');
+    input.value = '';
+    return;
+  }
+
+  // Store the file for upload on save
+  selectedFiles[type] = file;
+
+  // Update UI
+  const zone = document.getElementById(`upload-${type}`);
+  const status = document.getElementById(`upload-${type}-status`);
+  if (zone) zone.classList.add('uploaded');
+  if (status) {
+    const shortName = file.name.length > 28 ? file.name.substring(0, 25) + '\u2026' : file.name;
+    status.textContent = `\u2713 ${shortName} (${(file.size / 1024).toFixed(0)} KB) \u2014 ready to upload`;
+  }
+  showToast(`${file.name} selected \u2014 will upload on save`, 'success');
+}
+
+// Legacy alias kept in case anything else references it
+function simulateUpload(type) {
+  triggerFileInput(`file-${type}`);
 }
 
 async function saveAsset() {
@@ -1505,6 +1533,39 @@ document.addEventListener('DOMContentLoaded', () => {
   // Auto demo login for quick access
   document.getElementById('login-email').value = '';
   document.getElementById('login-password').value = '';
+
+  // Drag-and-drop for upload zones
+  const dropConfigs = [
+    { zoneId: 'upload-image',       inputId: 'file-image',       type: 'image',       maxMB: 5  },
+    { zoneId: 'upload-invoice',     inputId: 'file-invoice',     type: 'invoice',     maxMB: 10 },
+    { zoneId: 'upload-warranty-doc',inputId: 'file-warranty-doc',type: 'warranty-doc',maxMB: 10 },
+    { zoneId: 'upload-amc-doc',     inputId: 'file-amc-doc',     type: 'amc-doc',     maxMB: 10 },
+  ];
+
+  dropConfigs.forEach(({ zoneId, inputId, type, maxMB }) => {
+    const zone = document.getElementById(zoneId);
+    if (!zone) return;
+
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!file) return;
+      // Inject file into the hidden input then call handler
+      const input = document.getElementById(inputId);
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handleFileSelect(input, type, maxMB);
+      }
+    });
+  });
 });
 
 // EXPOSE TO HTML
@@ -1530,6 +1591,8 @@ window.calcWarrantyStatus = calcWarrantyStatus;
 window.calcAmcStatus = calcAmcStatus;
 window.calcNextService = calcNextService;
 window.simulateUpload = simulateUpload;
+window.triggerFileInput = triggerFileInput;
+window.handleFileSelect = handleFileSelect;
 window.saveAsset = saveAsset;
 window.filterWarranty = filterWarranty;
 window.filterAmc = filterAmc;
