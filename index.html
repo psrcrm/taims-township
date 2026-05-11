@@ -657,28 +657,32 @@
               <div class="form-card">
                 <h3 class="form-section-title">Documents & Media</h3>
                 <div class="upload-grid">
-                  <div class="upload-zone" id="upload-image" onclick="simulateUpload('image')">
+                  <div class="upload-zone" id="upload-image" onclick="triggerFileInput('file-image')">
+                    <input type="file" id="file-image" accept="image/jpeg,image/png" style="display:none" onchange="handleFileSelect(this,'image',5)">
                     <div class="upload-icon">📷</div>
                     <div class="upload-label">Asset Photo</div>
                     <div class="upload-sub">Click to upload or drag & drop</div>
                     <div class="upload-hint">JPG, PNG up to 5MB</div>
                     <div class="upload-status" id="upload-image-status"></div>
                   </div>
-                  <div class="upload-zone" id="upload-invoice" onclick="simulateUpload('invoice')">
+                  <div class="upload-zone" id="upload-invoice" onclick="triggerFileInput('file-invoice')">
+                    <input type="file" id="file-invoice" accept="application/pdf,image/jpeg,image/png" style="display:none" onchange="handleFileSelect(this,'invoice',10)">
                     <div class="upload-icon">🧾</div>
                     <div class="upload-label">Purchase Invoice</div>
                     <div class="upload-sub">Click to upload or drag & drop</div>
                     <div class="upload-hint">PDF, JPG up to 10MB</div>
                     <div class="upload-status" id="upload-invoice-status"></div>
                   </div>
-                  <div class="upload-zone" id="upload-warranty-doc" onclick="simulateUpload('warranty-doc')">
+                  <div class="upload-zone" id="upload-warranty-doc" onclick="triggerFileInput('file-warranty-doc')">
+                    <input type="file" id="file-warranty-doc" accept="application/pdf" style="display:none" onchange="handleFileSelect(this,'warranty-doc',10)">
                     <div class="upload-icon">📜</div>
                     <div class="upload-label">Warranty Certificate</div>
                     <div class="upload-sub">Click to upload or drag & drop</div>
                     <div class="upload-hint">PDF up to 10MB</div>
                     <div class="upload-status" id="upload-warranty-doc-status"></div>
                   </div>
-                  <div class="upload-zone" id="upload-amc-doc" onclick="simulateUpload('amc-doc')">
+                  <div class="upload-zone" id="upload-amc-doc" onclick="triggerFileInput('file-amc-doc')">
+                    <input type="file" id="file-amc-doc" accept="application/pdf" style="display:none" onchange="handleFileSelect(this,'amc-doc',10)">
                     <div class="upload-icon">📋</div>
                     <div class="upload-label">AMC Agreement</div>
                     <div class="upload-sub">Click to upload or drag & drop</div>
